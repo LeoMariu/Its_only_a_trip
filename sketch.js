@@ -1,5 +1,7 @@
 let atlas
 let data
+let font;
+let fontBold;
 let immagini = []
 let lineProgress = 0; // Add this new variable for line animation
 
@@ -11,31 +13,40 @@ let zoom = 0.5
 let selectedImage = null
 let isAltezze = false 
 let isSpostamenti = false // Add this new variable
-let showMainContent = false;
-let isMapView = false;  // Add this with your other state variables at the top
+let isMapView = true;  // Add this with your other state variables at the top
 
 function preload() {
 	atlas = loadImage('atlas_128.jpg')
 	data = loadJSON('output.json')
 }
 
+function success(font) {
+  fill('deeppink');
+  textFont(font);
+  textSize(36);
+}
+
 function setup() {
+  font = loadFont('/assets/picked.otf', success);
+  fontBold = loadFont('/assets/Bold.otf', success);
+
 	// Hide the canvas initially
 	const canvas = createCanvas(windowWidth, windowHeight, WEBGL);
 	canvas.parent('mainContent');
 	setupViewToggle();
 
-	const enterButton = document.getElementById("archiveLink");
-const startPage = document.getElementById("startPage");
-const mainContent = document.getElementById("mainContent");
-const buttonContainer = document.querySelector(".button-container");
 
-enterButton.addEventListener("click", () => {
-    startPage.style.display = "none";
-    mainContent.style.display = "block";
-    buttonContainer.style.display = "flex"; // Mostra i pulsanti
-    showMainContent = true;
-});
+// 	const enterButton = document.getElementById("archiveLink");
+// const startPage = document.getElementById("startPage");
+// const mainContent = document.getElementById("mainContent");
+// const buttonContainer = document.querySelector(".button-container");
+
+// enterButton.addEventListener("click", () => {
+//     startPage.style.display = "none";
+//     mainContent.style.display = "block";
+//     buttonContainer.style.display = "flex"; // Mostra i pulsanti
+//     showMainContent = true;
+// });
 
 
 
@@ -129,8 +140,9 @@ function setupViewToggle() {
   });
 }
 
+//-------- POSIZIONI -------------------------------------------------------------------------------------------------------------------------------------------------
+
 function draw() {
-  if (!showMainContent) return;
 
   background(50);
   scale(zoom);
@@ -157,66 +169,386 @@ function drawMapView() {
 	}
 
 	endShape()
+
+   // Add text at specific coordinates
+    push();
+    const specificPos = gpsToMercator(4.099917, -72.9088133);
+    const xPos = specificPos.x * 0.0001;
+    const yPos = specificPos.y * -0.0001;
+    
+    // // Draw a marker at the position
+    // fill(0, 0, 255); // Yellow marker
+    // noStroke()
+    // circle(xPos, yPos, 10);
+    
+    // Draw text
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("Colombia", xPos, yPos - 3);
+    
+    // Add the new marker for Thailand coordinates
+    const thaiPos = gpsToMercator(13.7524938, 100.4935089);
+    const thaiX = thaiPos.x * 0.0001;
+    const thaiY = thaiPos.y * -0.0001;
+    
+    // // Draw a marker at the Thai position
+    // fill(0, 0, 255);
+    // noStroke();
+    // circle(thaiX, thaiY, 10);
+    
+    // Draw text for Thailand
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("Thailand", thaiX, thaiY - 3);
+    
+    // Add the new marker for London coordinates
+    const londonPos = gpsToMercator(51.4893335, -0.1440551);
+    const londonX = londonPos.x * 0.0001;
+    const londonY = londonPos.y * -0.0001;
+    
+    // // Draw a marker at the London position
+    // fill(0, 0, 255);
+    // noStroke();
+    // circle(londonX, londonY, 10);
+    
+    // Draw text for London
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("London", londonX, londonY - 3);
+    
+    // Add the new marker for New York City coordinates
+    const nycPos = gpsToMercator(40.7127281, -74.0060152);
+    const nycX = nycPos.x * 0.0001;
+    const nycY = nycPos.y * -0.0001;
+    
+    // // Draw a marker at the NYC position
+    // fill(0, 0, 255);
+    // noStroke();
+    // circle(nycX, nycY, 10);
+    
+    // Draw text for New York City
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("New York", nycX, nycY - 3);
+    
+    // Add the new marker for China coordinates
+    const chinaPos = gpsToMercator(35.0000663, 104.999955);
+    const chinaX = chinaPos.x * 0.0001;
+    const chinaY = chinaPos.y * -0.0001;
+    
+    // // Draw a marker at the China position
+    // fill(0, 0, 255);
+    // noStroke();
+    // circle(chinaX, chinaY, 10);
+    
+    // Draw text for China
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("China", chinaX, chinaY - 3);
+    
+    // Add the new marker for Argentina coordinates
+    const argPos = gpsToMercator(-34.9964963, -64.9672817);
+    const argX = argPos.x * 0.0001;
+    const argY = argPos.y * -0.0001;
+    
+    // // Draw a marker at the Argentina position
+    // fill(0, 0, 255);
+    // noStroke();
+    // circle(argX, argY, 10);
+    
+    // Draw text for Argentina
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("Argentina", argX, argY - 3);
+    
+    // Add the new marker for Spain coordinates (39.3260685, -4.8379791)
+    const spainPos = gpsToMercator(39.3260685, -4.8379791);
+    const spainX = spainPos.x * 0.0001;
+    const spainY = spainPos.y * -0.0001;
+    
+    // // Draw a marker at the Spain position
+    // fill(0, 0, 255);
+    // noStroke();
+    // circle(spainX, spainY, 10);
+    
+    // Draw text for Spain
+    fill(255);
+    textSize(20);
+    textAlign(CENTER, BOTTOM);
+    text("Spain", spainX, spainY - 3);
+    pop();
+
 }
+
+//--------- SPOSTAMENTI -------------------------------------------------------------------------------------------------------------------------------------------
 
 function drawSpostamenti() {
-    // Find bounds of all coordinates to scale the view appropriately
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-    
-    // Sort images by date first
-    const sortedImages = [...immagini].sort((a, b) => 
-        new Date(a.meta.DateTimeOriginal) - new Date(b.meta.DateTimeOriginal)
+  // Find bounds of all coordinates to scale the view appropriately
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  
+  // Sort images by date first
+  const sortedImages = [...immagini].sort((a, b) => 
+    new Date(a.meta.DateTimeOriginal) - new Date(b.meta.DateTimeOriginal)
+  );
+  
+  for (let img of sortedImages) {
+    const x = img.pos.x * 0.0001;
+    const y = img.pos.y * -0.0001;
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  }
+  
+  // Draw the animated connecting red line
+  push();
+  stroke(255, 0, 0); // Red color
+  strokeWeight(0.5);
+  noFill();
+  beginShape();
+  
+  // Calculate how many points to draw based on animation progress
+  const numPoints = Math.floor(sortedImages.length * lineProgress);
+  
+  // Calculate total distance
+  let totalDistance = 0;
+  for (let i = 1; i < numPoints; i++) {
+    const img1 = sortedImages[i-1];
+    const img2 = sortedImages[i];
+    totalDistance += calculateDistance(
+      img1.meta.latitude, img1.meta.longitude,
+      img2.meta.latitude, img2.meta.longitude
     );
-    
-    for (let img of sortedImages) {
-        const x = img.pos.x * 0.0001;
-        const y = img.pos.y * -0.0001;
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-    }
-    
-    // Draw the animated connecting red line
-    push();
-    stroke(255, 0, 0); // Red color
-    strokeWeight(0.5);
-    noFill();
-    beginShape();
-    
-    // Calculate how many points to draw based on animation progress
-    const numPoints = Math.floor(sortedImages.length * lineProgress);
-    
-    // Draw up to the current progress point
-    for (let i = 0; i < numPoints; i++) {
-        const img = sortedImages[i];
-        const x = img.pos.x * 0.0001;
-        const y = img.pos.y * -0.0001;
-        vertex(x, y);
-    }
-    
-    endShape();
-    pop();
-    
-    // Draw circles for each image position
-    push();
-    noStroke();
-    fill(255); // White circles
-    for (let img of sortedImages) {
-        const x = img.pos.x * 0.0001;
-        const y = img.pos.y * -0.0001;
-        circle(x, y, 1);
-    }
-    pop();
+  }
+  
+  // Draw up to the current progress point
+  for (let i = 0; i < numPoints; i++) {
+    const img = sortedImages[i];
+    const x = img.pos.x * 0.0001;
+    const y = img.pos.y * -0.0001;
+    vertex(x, y);
+  }
+  
+  endShape();
+  pop();
+  
+  // Draw circles for each image position
+  push();
+  noStroke();
+  fill(255); // White circles
+  for (let img of sortedImages) {
+    const x = img.pos.x * 0.0001;
+    const y = img.pos.y * -0.0001;
+    circle(x, y, 1);
+  }
+  pop();
 
-    // Increment the animation progress
-    if (lineProgress < 1) { 
-        lineProgress += 0.001; // Adjust this value to control animation speed
+  // Add text at specific coordinates
+  push();
+  const specificPos = gpsToMercator(4.099917, -72.9088133);
+  const xPos = specificPos.x * 0.0001;
+  const yPos = specificPos.y * -0.0001;
+  
+  // Draw text
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Colombia", xPos, yPos - 3);
+  
+  // Add the new marker for Thailand coordinates
+  const thaiPos = gpsToMercator(13.7524938, 100.4935089);
+  const thaiX = thaiPos.x * 0.0001;
+  const thaiY = thaiPos.y * -0.0001;
+  
+  // Draw text for Thailand
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Thailand", thaiX, thaiY - 3);
+  
+  // Add the new marker for London coordinates
+  const londonPos = gpsToMercator(51.4893335, -0.1440551);
+  const londonX = londonPos.x * 0.0001;
+  const londonY = londonPos.y * -0.0001;
+  
+  // Draw text for London
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("London", londonX, londonY - 3);
+  
+  // Add the new marker for New York City coordinates
+  const nycPos = gpsToMercator(40.7127281, -74.0060152);
+  const nycX = nycPos.x * 0.0001;
+  const nycY = nycPos.y * -0.0001;
+  
+  // Draw text for New York City
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("New York", nycX, nycY - 3);
+  
+  // Add the new marker for China coordinates
+  const chinaPos = gpsToMercator(35.0000663, 104.999955);
+  const chinaX = chinaPos.x * 0.0001;
+  const chinaY = chinaPos.y * -0.0001;
+  
+  // Draw text for China
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("China", chinaX, chinaY - 3);
+  
+  // Add the new marker for Argentina coordinates
+  const argPos = gpsToMercator(-34.9964963, -64.9672817);
+  const argX = argPos.x * 0.0001;
+  const argY = argPos.y * -0.0001;
+  
+  // Draw text for Argentina
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Argentina", argX, argY - 3);
+  
+  // Add the new marker for Spain coordinates (39.3260685, -4.8379791)
+  const spainPos = gpsToMercator(39.3260685, -4.8379791);
+  const spainX = spainPos.x * 0.0001;
+  const spainY = spainPos.y * -0.0001;
+  
+  // Draw text for Spain
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Spain", spainX, spainY - 3);
+  pop();
+  
+  // MODIFICATO: Riquadro distanza percorsa
+  push();
+  // Display just the text without the box
+  fill(255);
+  noStroke();
+  textFont(fontBold); // Use the picked.otf font
+  textAlign(LEFT, TOP);
+  textSize(30);
+  text("Km percorsi:", width - 320, height - 150);
+  
+  // Larger size for the distance number
+  textFont(font);
+  textSize(30);
+  text(Math.round(totalDistance).toLocaleString() + " km", width - 320, height - 110);
+  pop();
+
+//---------- LISTA DEI LUOGHI VISITATI ----------------------------- 
+
+  // Display list of visited places on the left
+  push();
+  fill(255);
+  noStroke();
+  textFont(fontBold);
+  textAlign(LEFT, TOP);
+  textSize(30);
+  text("Luoghi visitati:", -width + 20, -height/2 - 320);
+  
+  // Get unique locations up to the current progress point
+  const visiblePoints = Math.floor(sortedImages.length * lineProgress);
+  const visitedLocations = new Map(); // Using Map to store location names by coordinates
+  
+  // Create a lookup cache to avoid repetitive API calls
+  if (!window.locationCache) {
+    window.locationCache = new Map();
+  }
+  
+  // Collect coordinates first
+  for (let i = 0; i < visiblePoints; i++) {
+    const img = sortedImages[i];
+    const lat = img.meta.latitude.toFixed(1);
+    const lng = img.meta.longitude.toFixed(1);
+    const locationId = `${lat},${lng}`;
+    
+    // Only add unique locations
+    if (!visitedLocations.has(locationId)) {
+      // Check if we already have this location in cache
+      if (window.locationCache.has(locationId)) {
+        visitedLocations.set(locationId, window.locationCache.get(locationId));
+      } else {
+        visitedLocations.set(locationId, "Caricamento...");
+        
+        // Immediately fetch the location name
+        (async function(locId) {
+          const [lat, lng] = locId.split(',');
+          try {
+            const locationName = await getLocationName(parseFloat(lat), parseFloat(lng));
+            window.locationCache.set(locId, locationName);
+            visitedLocations.set(locId, locationName);
+          } catch (error) {
+            console.error('Error fetching location name:', error);
+            window.locationCache.set(locId, 'Posizione non disponibile');
+            visitedLocations.set(locId, 'Posizione non disponibile');
+          }
+        })(locationId);
+      }
     }
+  }
+  
+  // Display the locations
+
+  fill(255);
+  noStroke();
+  textFont(font);
+  textAlign(LEFT, TOP);
+  textSize(30);
+  
+  let locationXPos = -width + 20; // Allow customization of X position
+  let locationYPos = -height/2 - 280;
+  let displayedLocations = Array.from(visitedLocations.keys()).slice(0, 39);
+
+  displayedLocations.forEach(locationId => {
+    textSize(30);
+    text(visitedLocations.get(locationId), locationXPos, locationYPos);
+    locationYPos += 40;
+  });
+  
+  if (visitedLocations.size > 10) {
+    textSize(30);
+    text(`+ ${visitedLocations.size - 10} altri luoghi`, locationXPos, locationYPos);
+  }
+  pop();
+
+  // Increment the animation progress
+  if (lineProgress < 1) { 
+    lineProgress += 0.001; // Adjust this value to control animation speed
+  }
 }
+
+//---------- CALCOLO DELLA DISTANZA ----------------------------- 
+
+// Function to calculate the distance between two points using the Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+    
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  
+  return distance;
+}
+
+//------------- ALTEZZE ---------------------------------------------------------------------------------------------------------------------------------------
 
 function drawAltezze() {
   // Sort images by date
@@ -242,7 +574,7 @@ function drawAltezze() {
   
   // Draw y-axis
   push();
-  stroke(255);
+  stroke(255, 255, 255, 30);
   strokeWeight(0.5);
   line(-width/2, height/2, -width/2, -height/2);
   
@@ -257,17 +589,77 @@ function drawAltezze() {
     
     // Tick mark
     stroke(255);
-    strokeWeight(1);
-    line(-width/2, y, -width/2 + 20, y);
+    strokeWeight(0.5);
+    line(-width/2, y, -width/2 - 10, y);
     
     // Altitude label
     noStroke();
     fill(255);
     textAlign(RIGHT, CENTER);
-    textSize(16);
-    text(altitude + 'm', -width/2 - 20, y);
+    textSize(20); // Usa una dimensione testo più ragionevole
+    // Disegna il testo DOPO la griglia, così non viene coperto dalle immagini
+    text(altitude + 'm', -width/2 - 30, y);
   }
   pop();
+  
+  push();
+    // linea asse X
+    stroke(255, 255, 255, 30);
+    strokeWeight(0.5);
+    line(-width/2, height/2, width/2 + 108, height/2);
+
+    // per ogni 1° gennaio dal 2016 al 2026
+    for (let year = 2016; year <= 2026; year++) {
+      const dt = new Date(year, 0, 1); // mese 0 = gennaio
+      // considera solo se nel range temporale
+      if (dt >= startTime && dt <= endTime) {
+        const t = (dt - startTime) / timeRange;
+        const x = map(t, 0, 1, -width/2 + 100, width/2);
+
+        // lineetta di tick (verso il basso)
+        stroke(255);
+        strokeWeight(0.5);
+        line(x, height/2, x, height/2 + 10);
+
+        // label anno
+        noStroke();
+        fill(255);
+        textAlign(CENTER, TOP);
+        textSize(20);
+        text(year, x, height/2 + 20);
+      }
+    }
+    // Always show tick for year 2016
+    const dt2016 = new Date(2016, 0, 1);
+    const t2016 = (dt2016 - startTime) / timeRange;
+    const x2016 = map(t2016, 0, 1, -width/2 + 100, width/2);
+
+    stroke(255);
+    strokeWeight(0.5);
+    line(x2016, height/2, x2016, height/2 + 10);
+
+    noStroke();
+    fill(255);
+    textAlign(CENTER, TOP);
+    textSize(20);
+    text(2016, x2016, height/2 + 20);
+    
+    // Always show tick for year 2025
+    const dt2025 = new Date(2025, 0, 1);
+    const t2025 = (dt2025 - startTime) / timeRange;
+    const x2025 = map(t2025, 0, 1, -width/2 + 100, width/2);
+
+    stroke(255);
+    strokeWeight(0.5);
+    line(x2025, height/2, x2025, height/2 + 10);
+
+    noStroke();
+    fill(255);
+    textAlign(CENTER, TOP);
+    textSize(20);
+    text(2025, x2025, height/2 + 20);
+    pop();
+
 
   // Draw images
   beginShape(QUADS);
@@ -289,6 +681,9 @@ function drawAltezze() {
 
   endShape();
 }
+
+//------------- SIDEBAR ---------------------------------------------------------------------------------------------------------------------------------------
+
 
 /**
  * Classe Immagine
@@ -371,6 +766,8 @@ class Immagine {
 	// 	vertex(x4, y4, z, this.u1, this.v2)
 	// }
 }
+
+
 
 function gpsToMercator(lat, lon) {
 	// console.log(lat, lon);

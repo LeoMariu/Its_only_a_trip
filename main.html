@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Archivio foto</title>
+    <link rel="stylesheet" href="stile.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+
+    <div class="relative">
+
+      <div id="mainContent">
+        <!-- Your existing content here -->
+      </div>
+
+      <div class="absolute top-0 left-0 button-container p-2">
+        <div class="flex flex-row gap-4">
+          <button id="posizioni" class="bg-sky-500 hover:bg-sky-700 rounded p-2">Posizioni</button>
+          <button id="viewToggle" class="bg-sky-500 hover:bg-sky-700 rounded p-2">Altezze</button>
+          <button id="gridToggle" class="bg-sky-500 hover:bg-sky-700 rounded p-2">Spostamenti</button>
+        </div>
+       
+      </div>
+
+    </div>
+
+    <!-- <div id="info"></div> -->
+    <div id="sidebar"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+    <script src="sketch.js"></script>
+  </body>
+</html>
