@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Favorit';
+  src: url('./fonts/favorit.otf') format('opentype');
+}
+
+body {
+  font-family: 'Favorit', sans-serif;
+}
 
 canvas {
   display: block;
@@ -12,26 +20,46 @@ main {
   display: block;
 }
 
+/* Stile per la sidebar */
 #sidebar {
   position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  width: 400px;
-  background: black;
-  color: white;
-  padding: 20px;
+  top: 10px;
+  right: 20px;
+  width: 350px;
+  height: auto;
+  max-height: 92%;
+  background-color: rgba(38, 38, 38); /* Colore di sfondo con trasparenza */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
+  padding: 20px;
+  padding-top: 20px; /* Spazio per il pulsante di chiusura */
   z-index: 1000;
   display: none;
-  box-sizing: border-box;
 }
 
-.sidebar-content {
-  display: flex;
-  flex-direction: column; /* cambiato da row a column */
-  gap: 20px;
-  width: 100%;
+.sidebar-content h2 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  color: white; /* Colore del titolo */
+}
+
+/* Stile per il pulsante di chiusura */
+#closeSidebar {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  margin-right: 10px;
+  margin-top: -5px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white; /* Colore bianco per la X */
+}
+
+#closeSidebar:hover {
+  color: #ccc; /* Colore più chiaro al passaggio del mouse */
 }
 
 .image-container {
@@ -42,73 +70,72 @@ main {
 
 .image-container img {
   width: 100%;
-  height: 100%;
+  height: 93%;
   object-fit: cover;
   border-radius: 4px;
   display: block;
+  margin-top: 20px; /* margine superiore per distanziare dall'intestazione */
 }
 
 .metadata-container {
   width: 100%;
   overflow-y: auto;
-  padding: 0 20px; /* Add padding to container */
+  padding: 0px; /* Add padding to container */
 }
 
 .metadata-container h2 {
   color: #ffffff;
-  margin: 20px 0;
+  margin: 10px 0;
   text-align: left; /* Change to left align */
   font-size: 1.5em;
+  margin-top: 20px; /* margine superiore per distanziare dall'immagine */
 }
 
 .metadata-item {
   text-align: left;
   padding: 0; /* Remove padding */
   border-bottom: 1px solid #333;
+  margin-bottom: 10px;
+}
+
+.metadata-item .label {
+  font-weight: bold;
+  color: white; /* Colore delle etichette */
 }
 
 .metadata-item span {
   display: block;
-  color: #ffffff;
+  color: white; /* Colore del testo delle informazioni */
   margin: 5px 0;
 }
 
+.metadata-item .info-text {
+  color: white; /* Colore del testo aggiuntivo */
+}
+
 .info-text {
-  color: #ffffff;
+  color: white; /* Colore del testo principale */
   font-size: 1.2em;
   margin: 0;
   text-align: left;
+  font-family: 'Favorit';
+  font-size: 15px;
 }
 
 .label {
   font-weight: bold;
   margin-right: 10px;
+  color: white; /* Colore delle etichette */
+  font-family: 'Favorit';
+  font-size: 15px;
 }
 
-.date {
-  font-size: 1.2em;
-  font-weight: regular;
-}
-
-.time {
+.date, .time, .altitude {
   font-size: 1.1em;
+  color: white; /* Colore delle informazioni specifiche */
 }
 
-.altitude {
-  font-size: 1.1em;
-  color: #cccccc;
-}
-
-/* #viewToggle, #gridToggle, #posizioni {
-    padding: 8px 16px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-} */
-
-.view-toggle-btn.disabled {
+/* .view-toggle-btn.disabled {
     opacity: 0.5;
     cursor: not-allowed;
     background-color: #666;
@@ -117,4 +144,34 @@ main {
 .view-toggle-btn.disabled:hover {
     background-color: #666;
     transform: none;
+} */
+
+button, a, [role="button"], .clickable {
+  cursor: pointer;
+}
+
+.immagine {
+      cursor: pointer; /* Cambia il cursore in una mano */
+    }
+
+    body {
+  overflow: hidden;
+}
+
+/* Stile per il pulsante di chiusura del pannello informazioni */
+#closePanelBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  margin-right: 10px;
+  margin-top: -5px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white; /* Colore bianco per la X */
+}
+
+#closePanelBtn:hover {
+  color: #ccc; /* Colore più chiaro al passaggio del mouse */
 }

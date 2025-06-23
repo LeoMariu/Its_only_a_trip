@@ -27,44 +27,41 @@ function success(font) {
 }
 
 function setup() {
-  font = loadFont('/assets/picked.otf', success);
-  fontBold = loadFont('/assets/Bold.otf', success);
+  font = loadFont('/assets/favorit.otf', success);
+  fontBold = loadFont('/assets/favoritBold.otf', success);
 
-	// Hide the canvas initially
-	const canvas = createCanvas(windowWidth, windowHeight, WEBGL);
-	canvas.parent('mainContent');
-	setupViewToggle();
+  // Hide the canvas initially
+  const canvas = createCanvas(windowWidth, windowHeight, WEBGL);
+  canvas.parent('mainContent');
+  setupViewToggle();
 
+  // Imposta la modalità Altimetro come predefinita
+  isMapView = false;
+  isAltezze = true;
+  isSpostamenti = false;
 
-// 	const enterButton = document.getElementById("archiveLink");
-// const startPage = document.getElementById("startPage");
-// const mainContent = document.getElementById("mainContent");
-// const buttonContainer = document.querySelector(".button-container");
+  // Aggiorna il pannello informazioni per riflettere la modalità Altimetro
+  updateInfoPanel();
 
-// enterButton.addEventListener("click", () => {
-//     startPage.style.display = "none";
-//     mainContent.style.display = "block";
-//     buttonContainer.style.display = "flex"; // Mostra i pulsanti
-//     showMainContent = true;
-// });
+  // Reset dei parametri di visualizzazione per Altimetro
+  dragX = 0;
+  dragY = 0;
+  zoom = 0.5;
 
+  // Workaround penoso visto che p5js non supporta JSON arrays
+  Object.keys(data).forEach(k => {
+    const item = data[k];
 
+    const w = item.width;
+    const h = item.height;
 
-	// Workaround penoso visto che p5js non supporta JSON arrays
-	Object.keys(data).forEach(k => {
-			
-		const item = data[k]
+    const u1 = item.x / atlas.width;
+    const v1 = item.y / atlas.height;
+    const u2 = (item.x + w) / atlas.width;
+    const v2 = (item.y + h) / atlas.height;
 
-		const w = item.width
-		const h = item.height
-
-		const u1 = item.x / atlas.width
-		const v1 = item.y / atlas.height
-		const u2 = (item.x + w) / atlas.width
-		const v2 = (item.y + h) / atlas.height
-
-		immagini.push(new Immagine(item, w, h, u1, v1, u2, v2))
-	})
+    immagini.push(new Immagine(item, w, h, u1, v1, u2, v2));
+  });
 
 	// document.body.style.cursor = 'grab'
 }
@@ -99,6 +96,19 @@ function mouseWheel(event) {
     dragY += (newWorldY - worldY)
 }
 
+function gpsToMercator(lat, lon) {
+	// console.log(lat, lon);
+
+    const R = 6378137; // Raggio della Terra in metri (WGS84)
+    const x = R * lon * Math.PI / 180;
+    const y = R * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2));
+	// console.log(x, y);
+
+    return {x, y};
+
+
+}
+
 function windowResized() {
 	resizeCanvas(windowWidth, windowHeight)
 }
@@ -112,33 +122,112 @@ function setupViewToggle() {
     isMapView = true;
     isAltezze = false;
     isSpostamenti = false;
-    // Reset view parameters when switching
+    lineProgress = 0; // Reset line animation progress
     dragX = 0;
     dragY = 0;
     zoom = 0.5;
+
+    document.getElementById("kmPercorsi-wrapper").style.display = "none";
+    document.getElementById("continenti-wrapper").style.display = "none";
+    document.getElementById("kmPercorsiOgniAnno-wrapper").style.display = "none";
+    document.getElementById("fotoScattateOgniAnno-wrapper").style.display = "none";
+
+    updateInfoPanel();
   });
 
   toggleBtn.addEventListener('click', () => {
     isMapView = false;
     isAltezze = true;
     isSpostamenti = false;
-    // Reset view parameters when switching
+    lineProgress = 0; // Reset line animation progress
     dragX = 0;
     dragY = 0;
     zoom = 0.5;
+
+    document.getElementById("kmPercorsi-wrapper").style.display = "none";
+    document.getElementById("continenti-wrapper").style.display = "none";
+    document.getElementById("kmPercorsiOgniAnno-wrapper").style.display = "none";
+    document.getElementById("fotoScattateOgniAnno-wrapper").style.display = "none";
+
+    updateInfoPanel();
   });
 
   gridBtn.addEventListener('click', () => {
     isMapView = false;
     isAltezze = false;
     isSpostamenti = true;
-    lineProgress = 0; // Reset line animation
-    // Reset view parameters when switching
+    lineProgress = 0; // Reset line animation progress
     dragX = 0;
     dragY = 0;
     zoom = 0.5;
+
+    document.getElementById("kmPercorsi-wrapper").style.display = "block";
+    document.getElementById("continenti-wrapper").style.display = "block";
+    document.getElementById("kmPercorsiOgniAnno-wrapper").style.display = "block";
+    document.getElementById("fotoScattateOgniAnno-wrapper").style.display = "block";
+
+    updateYearlyDistance(lineProgress);
+    updatePhotoCountByYear(lineProgress);
+
+    updateInfoPanel();
   });
 }
+
+function updateYearlyDistance(progress) {
+  const sortedImages = [...immagini].sort((a, b) => 
+    new Date(a.meta.DateTimeOriginal) - new Date(b.meta.DateTimeOriginal)
+  );
+
+  const yearlyDistances = {};
+  const visiblePoints = Math.floor(sortedImages.length * progress);
+
+  for (let i = 1; i < visiblePoints; i++) {
+    const img1 = sortedImages[i - 1];
+    const img2 = sortedImages[i];
+    const year = new Date(img2.meta.DateTimeOriginal).getFullYear();
+
+    const distance = calculateDistance(
+      img1.meta.latitude, img1.meta.longitude,
+      img2.meta.latitude, img2.meta.longitude
+    );
+
+    yearlyDistances[year] = (yearlyDistances[year] || 0) + distance;
+  }
+
+  let htmlContent = '';
+  Object.keys(yearlyDistances).sort((a, b) => a - b).forEach(year => {
+    htmlContent += `${year}: ${Math.round(yearlyDistances[year]).toLocaleString()} km<br>`;
+  });
+
+  document.getElementById("kmPercorsiOgniAnno").innerHTML = htmlContent;
+}
+
+function updatePhotoCountByYear(progress) {
+  const sortedImages = [...immagini].sort((a, b) =>
+    new Date(a.meta.DateTimeOriginal) - new Date(b.meta.DateTimeOriginal)
+  );
+
+  const visiblePoints = Math.floor(sortedImages.length * progress);
+  const yearlyPhotoCounts = {};
+
+  for (let i = 0; i < visiblePoints; i++) {
+    const year = new Date(sortedImages[i].meta.DateTimeOriginal).getFullYear();
+    yearlyPhotoCounts[year] = (yearlyPhotoCounts[year] || 0) + 1;
+  }
+
+  let html = '';
+  Object.keys(yearlyPhotoCounts).sort().forEach(year => {
+    html += `${year}: ${yearlyPhotoCounts[year]} foto<br>`;
+  });
+
+  const fotoScattateElement = document.getElementById("fotoScattateOgniAnno");
+  if (fotoScattateElement) {
+    fotoScattateElement.innerHTML = html;
+  } else {
+    console.error("Element 'fotoScattateOgniAnno' not found in the DOM.");
+  }
+}
+
 
 //-------- POSIZIONI -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -201,55 +290,55 @@ function drawMapView() {
     fill(255);
     textSize(20);
     textAlign(CENTER, BOTTOM);
-    text("Thailand", thaiX, thaiY - 3);
+    text("Thailandia", thaiX, thaiY - 3);
     
-    // Add the new marker for London coordinates
-    const londonPos = gpsToMercator(51.4893335, -0.1440551);
-    const londonX = londonPos.x * 0.0001;
-    const londonY = londonPos.y * -0.0001;
+    // Add the new marker for italia coordinates
+    const italiaPos = gpsToMercator(42.6384261, 12.674297);
+    const italiaX = italiaPos.x * 0.0001;
+    const italiaY = italiaPos.y * -0.0001;
     
-    // // Draw a marker at the London position
+    // // Draw a marker at the italia position
     // fill(0, 0, 255);
     // noStroke();
-    // circle(londonX, londonY, 10);
+    // circle(italiaX, italiaY, 10);
     
-    // Draw text for London
+    // Draw text for italia
     fill(255);
     textSize(20);
     textAlign(CENTER, BOTTOM);
-    text("London", londonX, londonY - 3);
+    text("Italia", italiaX, italiaY - 3);
     
-    // Add the new marker for New York City coordinates
-    const nycPos = gpsToMercator(40.7127281, -74.0060152);
-    const nycX = nycPos.x * 0.0001;
-    const nycY = nycPos.y * -0.0001;
+    // Add the new marker for India City coordinates
+    const indiaPos = gpsToMercator(22.3511148, 78.6677428);
+    const indiaX = indiaPos.x * 0.0001;
+    const indiaY = indiaPos.y * -0.0001;
     
-    // // Draw a marker at the NYC position
+    // // Draw a marker at the india position
     // fill(0, 0, 255);
     // noStroke();
-    // circle(nycX, nycY, 10);
+    // circle(indiaX, indiaY, 10);
     
-    // Draw text for New York City
+    // Draw text for India City
     fill(255);
     textSize(20);
     textAlign(CENTER, BOTTOM);
-    text("New York", nycX, nycY - 3);
+    text("India", indiaX, indiaY - 3);
     
-    // Add the new marker for China coordinates
-    const chinaPos = gpsToMercator(35.0000663, 104.999955);
-    const chinaX = chinaPos.x * 0.0001;
-    const chinaY = chinaPos.y * -0.0001;
+    // Add the new marker for cina coordinates
+    const cinaPos = gpsToMercator(35.0000663, 104.999955);
+    const cinaX = cinaPos.x * 0.0001;
+    const cinaY = cinaPos.y * -0.0001;
     
-    // // Draw a marker at the China position
+    // // Draw a marker at the cina position
     // fill(0, 0, 255);
     // noStroke();
-    // circle(chinaX, chinaY, 10);
+    // circle(cinaX, cinaY, 10);
     
-    // Draw text for China
+    // Draw text for cina
     fill(255);
     textSize(20);
     textAlign(CENTER, BOTTOM);
-    text("China", chinaX, chinaY - 3);
+    text("Cina", cinaX, cinaY - 3);
     
     // Add the new marker for Argentina coordinates
     const argPos = gpsToMercator(-34.9964963, -64.9672817);
@@ -267,24 +356,105 @@ function drawMapView() {
     textAlign(CENTER, BOTTOM);
     text("Argentina", argX, argY - 3);
     
-    // Add the new marker for Spain coordinates (39.3260685, -4.8379791)
-    const spainPos = gpsToMercator(39.3260685, -4.8379791);
-    const spainX = spainPos.x * 0.0001;
-    const spainY = spainPos.y * -0.0001;
+    // Add the new marker for nigeria coordinates (9.6000359, 7.9999721)
+    const nigeriaPos = gpsToMercator(9.6000359, 7.9999721);
+    const nigeriaX = nigeriaPos.x * 0.0001;
+    const nigeriaY = nigeriaPos.y * -0.0001;
     
-    // // Draw a marker at the Spain position
+    // // Draw a marker at the nigeria position
     // fill(0, 0, 255);
     // noStroke();
-    // circle(spainX, spainY, 10);
+    // circle(nigeriaX, nigeriaY, 10);
     
-    // Draw text for Spain
+    // Draw text for nigeria
     fill(255);
     textSize(20);
     textAlign(CENTER, BOTTOM);
-    text("Spain", spainX, spainY - 3);
-    pop();
+    text("Nigeria", nigeriaX, nigeriaY - 3);
+
+  const messicoPos = gpsToMercator(23.6585116, -102.0077097);
+  const messicoX = messicoPos.x * 0.0001;
+  const messicoY = messicoPos.y * -0.0001;
+    
+  // // Draw a marker at the messico position
+  // fill(0, 0, 255);
+  // noStroke();
+  // circle(messicoX, messicoY, 10);
+    
+  // Draw text for messico
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Messico", messicoX, messicoY - 3);
+
+  const sudafricaPos = gpsToMercator(-28.8166236, 24.991639);
+  const sudafricaX = sudafricaPos.x * 0.0001;
+  const sudafricaY = sudafricaPos.y * -0.0001;
+    
+  // // Draw a marker at the sudafrica position
+  // fill(0, 0, 255);
+  // noStroke();
+  // circle(sudafricaX, sudafricaY, 10);
+    
+  // Draw text for sudafrica
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Sudafrica", sudafricaX, sudafricaY - 3);
+
+  const regnoPos = gpsToMercator(54.3151594, -1.9181532);
+  const regnoX = regnoPos.x * 0.0001;
+  const regnoY = regnoPos.y * -0.0001;
+    
+  // // Draw a marker at the regno position
+  // fill(0, 0, 255);
+  // noStroke();
+  // circle(regnoX, regnoY, 10);
+    
+  // Draw text for regno
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Regno Unito", regnoX, regnoY - 3);
+
+  pop();
 
 }
+
+//--------- PULSANTE PLAYPAUSE ----------------------------------------
+
+document.addEventListener("DOMContentLoaded", () => {
+  const playPauseButton = document.getElementById("playPause");
+  const viewToggle = document.getElementById("viewToggle");
+  const posizioniButton = document.getElementById("posizioni");
+  const gridToggle = document.getElementById("gridToggle");
+
+  function drawSpostamenti() {
+    playPauseButton.style.display = "block";
+  }
+
+  viewToggle.addEventListener("click", () => {
+    playPauseButton.style.display = "none";
+  });
+
+  posizioniButton.addEventListener("click", () => {
+    playPauseButton.style.display = "none";
+  });
+
+  gridToggle.addEventListener("click", () => {
+    drawSpostamenti();
+
+    
+  });
+
+  let isPlaying = false;
+
+  playPauseButton.addEventListener("click", () => {
+    isPlaying = !isPlaying;
+    playPauseButton.textContent = isPlaying ? "Pause" : "Play";
+    console.log(isPlaying ? "Animazione ripresa" : "Animazione fermata");
+  });
+});
 
 //--------- SPOSTAMENTI -------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -340,15 +510,31 @@ function drawSpostamenti() {
   
   endShape();
   pop();
-  
+
   // Draw circles for each image position
   push();
   noStroke();
   fill(255); // White circles
+  
+  // Check if mouse is over any circle
+  let isOverCircle = false;
   for (let img of sortedImages) {
     const x = img.pos.x * 0.0001;
     const y = img.pos.y * -0.0001;
+    
+    // Check if mouse is over this circle
+    const d = dist((mouseX - width/2)/zoom - dragX, (mouseY - height/2)/zoom - dragY, x, y);
+    if (d < 1) {
+      isOverCircle = true;
+      cursor(HAND);
+    }
+    
     circle(x, y, 1);
+  }
+  
+  // Reset cursor if not over any circle
+  if (!isOverCircle) {
+    cursor(ARROW);
   }
   pop();
 
@@ -373,40 +559,40 @@ function drawSpostamenti() {
   fill(255);
   textSize(20);
   textAlign(CENTER, BOTTOM);
-  text("Thailand", thaiX, thaiY - 3);
+  text("Thailandia", thaiX, thaiY - 3);
   
-  // Add the new marker for London coordinates
-  const londonPos = gpsToMercator(51.4893335, -0.1440551);
-  const londonX = londonPos.x * 0.0001;
-  const londonY = londonPos.y * -0.0001;
+  // Add the new marker for italia coordinates
+  const italiaPos = gpsToMercator(42.6384261, 12.674297);
+  const italiaX = italiaPos.x * 0.0001;
+  const italiaY = italiaPos.y * -0.0001;
   
-  // Draw text for London
+  // Draw text for italia
   fill(255);
   textSize(20);
   textAlign(CENTER, BOTTOM);
-  text("London", londonX, londonY - 3);
+  text("Italia", italiaX, italiaY - 3);
   
-  // Add the new marker for New York City coordinates
-  const nycPos = gpsToMercator(40.7127281, -74.0060152);
-  const nycX = nycPos.x * 0.0001;
-  const nycY = nycPos.y * -0.0001;
+  // Add the new marker for India City coordinates
+  const indiaPos = gpsToMercator(22.3511148, 78.6677428);
+  const indiaX = indiaPos.x * 0.0001;
+  const indiaY = indiaPos.y * -0.0001;
   
-  // Draw text for New York City
+  // Draw text for India City
   fill(255);
   textSize(20);
   textAlign(CENTER, BOTTOM);
-  text("New York", nycX, nycY - 3);
+  text("India", indiaX, indiaY - 3);
   
-  // Add the new marker for China coordinates
-  const chinaPos = gpsToMercator(35.0000663, 104.999955);
-  const chinaX = chinaPos.x * 0.0001;
-  const chinaY = chinaPos.y * -0.0001;
+  // Add the new marker for cina coordinates
+  const cinaPos = gpsToMercator(35.0000663, 104.999955);
+  const cinaX = cinaPos.x * 0.0001;
+  const cinaY = cinaPos.y * -0.0001;
   
-  // Draw text for China
+  // Draw text for cina
   fill(255);
   textSize(20);
   textAlign(CENTER, BOTTOM);
-  text("China", chinaX, chinaY - 3);
+  text("Cina", cinaX, cinaY - 3);
   
   // Add the new marker for Argentina coordinates
   const argPos = gpsToMercator(-34.9964963, -64.9672817);
@@ -419,115 +605,130 @@ function drawSpostamenti() {
   textAlign(CENTER, BOTTOM);
   text("Argentina", argX, argY - 3);
   
-  // Add the new marker for Spain coordinates (39.3260685, -4.8379791)
-  const spainPos = gpsToMercator(39.3260685, -4.8379791);
-  const spainX = spainPos.x * 0.0001;
-  const spainY = spainPos.y * -0.0001;
+  // Add the new marker for nigeria coordinates (9.6000359, 7.9999721)
+  const nigeriaPos = gpsToMercator(9.6000359, 7.9999721);
+  const nigeriaX = nigeriaPos.x * 0.0001;
+  const nigeriaY = nigeriaPos.y * -0.0001;
   
-  // Draw text for Spain
+  // Draw text for nigeria
   fill(255);
   textSize(20);
   textAlign(CENTER, BOTTOM);
-  text("Spain", spainX, spainY - 3);
+  text("Nigeria", nigeriaX, nigeriaY - 3);
+
+  const messicoPos = gpsToMercator(23.6585116, -102.0077097);
+  const messicoX = messicoPos.x * 0.0001;
+  const messicoY = messicoPos.y * -0.0001;
+    
+  // // Draw a marker at the messico position
+  // fill(0, 0, 255);
+  // noStroke();
+  // circle(messicoX, messicoY, 10);
+    
+  // Draw text for messico
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Messico", messicoX, messicoY - 3);
+
+  const sudafricaPos = gpsToMercator(-28.8166236, 24.991639);
+  const sudafricaX = sudafricaPos.x * 0.0001;
+  const sudafricaY = sudafricaPos.y * -0.0001;
+    
+  // // Draw a marker at the sudafrica position
+  // fill(0, 0, 255);
+  // noStroke();
+  // circle(sudafricaX, sudafricaY, 10);
+    
+  // Draw text for sudafrica
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Sudafrica", sudafricaX, sudafricaY - 3);
+
+  const regnoPos = gpsToMercator(54.3151594, -1.9181532);
+  const regnoX = regnoPos.x * 0.0001;
+  const regnoY = regnoPos.y * -0.0001;
+    
+  // // Draw a marker at the regno position
+  // fill(0, 0, 255);
+  // noStroke();
+  // circle(regnoX, regnoY, 10);
+    
+  // Draw text for regno
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, BOTTOM);
+  text("Regno Unito", regnoX, regnoY - 3);
   pop();
-  
+
   // MODIFICATO: Riquadro distanza percorsa
   push();
-  // Display just the text without the box
-  fill(255);
-  noStroke();
-  textFont(fontBold); // Use the picked.otf font
-  textAlign(LEFT, TOP);
-  textSize(30);
-  text("Km percorsi:", width - 320, height - 150);
-  
-  // Larger size for the distance number
-  textFont(font);
-  textSize(30);
-  text(Math.round(totalDistance).toLocaleString() + " km", width - 320, height - 110);
+  // Reset transformation matrix to draw in screen coordinates
+  resetMatrix();
+  document.getElementById("kmPercorsi").innerText = Math.round(totalDistance).toLocaleString() + " km";
   pop();
 
-//---------- LISTA DEI LUOGHI VISITATI ----------------------------- 
+  //---------- LISTA DEI CONTINENTI VISITATI E NUMERO DI FOTO SCATTATE ----------------------------- 
 
-  // Display list of visited places on the left
-  push();
-  fill(255);
-  noStroke();
-  textFont(fontBold);
-  textAlign(LEFT, TOP);
-  textSize(30);
-  text("Luoghi visitati:", -width + 20, -height/2 - 320);
-  
-  // Get unique locations up to the current progress point
-  const visiblePoints = Math.floor(sortedImages.length * lineProgress);
-  const visitedLocations = new Map(); // Using Map to store location names by coordinates
-  
-  // Create a lookup cache to avoid repetitive API calls
-  if (!window.locationCache) {
-    window.locationCache = new Map();
+  // Map coordinates to continents
+  function getContinent(lat, lng) {
+    if (lat > 35 && lat < 72 && lng > -25 && lng < 40) return "Europe";
+    if ((lat > 34 && lng > 40 && lng < 180) || (lat > 0 && lat < 34 && lng > 100 && lng < 180)) return "Asia";
+    if ((lat > 25 && lng < -30 && lng > -170) || (lat > 50 && lng < -30 && lng > -180)) return "North America";
+    if (lat < 35 && lat > -35 && lng > -20 && lng < 55) return "Africa";
+    if (lat < 12 && lat > -60 && lng < -30 && lng > -90) return "South America";
+    if (lat < 0 && lat > -50 && lng > 110 && lng < 180) return "Oceania";
+    if (lat < -60) return "Antarctica";
+    return "Unknown";
   }
+
+  // Get unique continents and count images per continent up to current progress point
+  const visiblePoints = Math.floor(sortedImages.length * lineProgress);
+  const continentCounts = {};
+  const visitedContinents = new Set();
   
-  // Collect coordinates first
   for (let i = 0; i < visiblePoints; i++) {
     const img = sortedImages[i];
-    const lat = img.meta.latitude.toFixed(1);
-    const lng = img.meta.longitude.toFixed(1);
-    const locationId = `${lat},${lng}`;
-    
-    // Only add unique locations
-    if (!visitedLocations.has(locationId)) {
-      // Check if we already have this location in cache
-      if (window.locationCache.has(locationId)) {
-        visitedLocations.set(locationId, window.locationCache.get(locationId));
-      } else {
-        visitedLocations.set(locationId, "Caricamento...");
-        
-        // Immediately fetch the location name
-        (async function(locId) {
-          const [lat, lng] = locId.split(',');
-          try {
-            const locationName = await getLocationName(parseFloat(lat), parseFloat(lng));
-            window.locationCache.set(locId, locationName);
-            visitedLocations.set(locId, locationName);
-          } catch (error) {
-            console.error('Error fetching location name:', error);
-            window.locationCache.set(locId, 'Posizione non disponibile');
-            visitedLocations.set(locId, 'Posizione non disponibile');
-          }
-        })(locationId);
-      }
+    const continent = getContinent(img.meta.latitude, img.meta.longitude);
+    if (continent !== "Unknown") {
+      continentCounts[continent] = (continentCounts[continent] || 0) + 1;
+      visitedContinents.add(continent);
     }
   }
   
-  // Display the locations
-
-  fill(255);
-  noStroke();
-  textFont(font);
-  textAlign(LEFT, TOP);
-  textSize(30);
-  
-  let locationXPos = -width + 20; // Allow customization of X position
-  let locationYPos = -height/2 - 280;
-  let displayedLocations = Array.from(visitedLocations.keys()).slice(0, 39);
-
-  displayedLocations.forEach(locationId => {
-    textSize(30);
-    text(visitedLocations.get(locationId), locationXPos, locationYPos);
-    locationYPos += 40;
+  // Create HTML with continent names and counts
+  let htmlContent = '';
+  visitedContinents.forEach(continent => {
+    if (continent !== "Unknown") {
+      htmlContent += `${continent}: ${continentCounts[continent]} foto<br>`;
+    }
   });
   
-  if (visitedLocations.size > 10) {
-    textSize(30);
-    text(`+ ${visitedLocations.size - 10} altri luoghi`, locationXPos, locationYPos);
-  }
-  pop();
+  document.getElementById("continenti").innerHTML = htmlContent;
 
-  // Increment the animation progress
-  if (lineProgress < 1) { 
-    lineProgress += 0.001; // Adjust this value to control animation speed
+  // Increment the animation progress only if playing
+  if (isPlaying && lineProgress < 1) { 
+    lineProgress += 0.004;
   }
+
+  updateYearlyDistance(lineProgress);
+  updatePhotoCountByYear(lineProgress);
+
 }
+
+// Add play/pause functionality
+let isPlaying = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const playPauseButton = document.getElementById("playPause");
+
+  playPauseButton.addEventListener("click", () => {
+    isPlaying = !isPlaying;
+    playPauseButton.textContent = isPlaying ? "Pause" : "Play";
+    console.log(isPlaying ? "Animazione ripresa" : "Animazione fermata");
+  });
+});
 
 //---------- CALCOLO DELLA DISTANZA ----------------------------- 
 
@@ -667,11 +868,26 @@ function drawAltezze() {
   textureMode(NORMAL);
   texture(atlas);
 
+  let isOverImage = false; // Track if the pointer is over any image
+
   for (let img of sortedImages) {
     const timePosition = (new Date(img.meta.DateTimeOriginal) - startTime) / timeRange;
     const x = map(timePosition, 0, 1, -width/2 + 100, width/2); // Offset x to make room for axis
     const y = map(img.altitude, minAlt, maxAlt, height/2, -height/2);
-    
+
+    // Check if the mouse is over this image
+    const mouseWorldX = (mouseX - width / 2) / zoom - dragX;
+    const mouseWorldY = (mouseY - height / 2) / zoom - dragY;
+
+    if (
+      mouseWorldX > x - img.w2 &&
+      mouseWorldX < x + img.w2 &&
+      mouseWorldY > y - img.h2 &&
+      mouseWorldY < y + img.h2
+    ) {
+      isOverImage = true;
+    }
+
     // Draw image at timeline position
     vertex(x - img.w2, y - img.h2, 0, img.u1, img.v1);
     vertex(x + img.w2, y - img.h2, 0, img.u2, img.v1);
@@ -680,6 +896,13 @@ function drawAltezze() {
   }
 
   endShape();
+
+  // Change cursor to hand if over an image
+  if (isOverImage) {
+    cursor(HAND);
+  } else {
+    cursor(ARROW);
+  }
 }
 
 //------------- SIDEBAR ---------------------------------------------------------------------------------------------------------------------------------------
@@ -709,9 +932,9 @@ class Immagine {
 
 		this.meta = meta
 		this.w = w
-		this.w2 = w /100
+		this.w2 = w /60
 		this.h = h
-		this.h2 = h /100
+		this.h2 = h /60
 
 		// this.w = altitude * 0.5
 		// this.w2 = altitude * 0.5 / 2
@@ -768,34 +991,25 @@ class Immagine {
 }
 
 
-
-function gpsToMercator(lat, lon) {
-	// console.log(lat, lon);
-
-    const R = 6378137; // Raggio della Terra in metri (WGS84)
-    const x = R * lon * Math.PI / 180;
-    const y = R * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2));
-	// console.log(x, y);
-
-    return {x, y};
-
-
-}
-
 function mouseClicked() {
   // Converti la posizione del mouse in coordinate mondiali
-  const worldX = (mouseX - width/2) / zoom - dragX;
-  const worldY = (mouseY - height/2) / zoom - dragY;
+  const worldX = (mouseX - width / 2) / zoom - dragX;
+  const worldY = (mouseY - height / 2) / zoom - dragY;
+
+  if (isMapView) {
+    // Non fare nulla se siamo nella modalità "posizioni"
+    return;
+  }
 
   if (isAltezze) {
     // Get time and altitude ranges for timeline view
-    const sortedImages = [...immagini].sort((a, b) => 
+    const sortedImages = [...immagini].sort((a, b) =>
       new Date(a.meta.DateTimeOriginal) - new Date(b.meta.DateTimeOriginal)
     );
     const startTime = new Date(sortedImages[0].meta.DateTimeOriginal);
     const endTime = new Date(sortedImages[sortedImages.length - 1].meta.DateTimeOriginal);
     const timeRange = endTime - startTime;
-    
+
     const altitudes = sortedImages.map(img => img.altitude);
     const minAlt = Math.min(...altitudes);
     const maxAlt = Math.max(...altitudes);
@@ -803,11 +1017,15 @@ function mouseClicked() {
     // Check clicks on images in timeline view
     for (let img of sortedImages) {
       const timePosition = (new Date(img.meta.DateTimeOriginal) - startTime) / timeRange;
-      const x = map(timePosition, 0, 1, -width/2 + 100, width/2);
-      const y = map(img.altitude, minAlt, maxAlt, height/2, -height/2);
-      
-      if (worldX > x - img.w2 && worldX < x + img.w2 &&
-          worldY > y - img.h2 && worldY < y + img.h2) {
+      const x = map(timePosition, 0, 1, -width / 2 + 100, width / 2);
+      const y = map(img.altitude, minAlt, maxAlt, height / 2, -height / 2);
+
+      if (
+        worldX > x - img.w2 &&
+        worldX < x + img.w2 &&
+        worldY > y - img.h2 &&
+        worldY < y + img.h2
+      ) {
         showSidebar(img);
         return;
       }
@@ -817,17 +1035,21 @@ function mouseClicked() {
     for (let img of immagini) {
       const imgX = img.pos.x * 0.0001;
       const imgY = img.pos.y * -0.0001;
-      
-      if (worldX > imgX - img.w2 && worldX < imgX + img.w2 &&
-          worldY > imgY - img.h2 && worldY < imgY + img.h2) {
+
+      if (
+        worldX > imgX - img.w2 &&
+        worldX < imgX + img.w2 &&
+        worldY > imgY - img.h2 &&
+        worldY < imgY + img.h2
+      ) {
         showSidebar(img);
         return;
       }
     }
   }
-  
+
   // Se clicchiamo fuori, nascondiamo la sidebar
-  document.getElementById('sidebar').style.display = 'none';
+  // document.getElementById('sidebar').style.display = 'none';
 }
 
 async function showSidebar(img) {
@@ -857,23 +1079,44 @@ async function showSidebar(img) {
 
   let html = `
     <div class="sidebar-content">
+      <!-- Close button -->
+      <button id="closeSidebar" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+      
+      <!-- Image Section -->
       <div class="image-container">
         <img src="images/${file_name_pad}${img.meta.FileExtension}" alt="images/${img.meta.FileName}${img.meta.FileExtension}">
       </div>
-      <div class="metadata-container" style="padding: 0 20px;">
-        <h2 style="text-align: left; margin-bottom: 16px;">Informazioni</h2>
-        <div class="metadata-item" style="display: flex; flex-direction: column; gap: 8px;">
-          <div class="info-row" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="label">Data:</span> ${date}</div>
-          <div class="info-row" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="label">Ora:</span> ${time}</div>
-          <div class="info-row" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="label">Altitudine:</span> ${Math.round(img.altitude)} m</div>
-          <div class="info-row" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="label">Luogo:</span> ${locationName}</div>
-          <div class="info-row" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="label">Latitudine:</span> ${latitude}°</div>
-          <div class="info-row" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="label">Longitudine:</span> ${longitude}°</div>
+      
+      <!-- Metadata Section -->
+      <div class="metadata-container">
+        <h2>Informazioni</h2>
+        <div class="metadata-item">
+          <span class="label">Data:</span> <span class="info-text">${date}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Ora:</span> <span class="info-text">${time}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Altitudine:</span> <span class="info-text">${Math.round(img.altitude)} m</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Luogo:</span> <span class="info-text">${locationName}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Latitudine:</span> <span class="info-text">${latitude}°</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Longitudine:</span> <span class="info-text">${longitude}°</span>
         </div>
       </div>
     </div>`;
   
   sidebar.innerHTML = html;
+
+  // Add event listener to close button
+  document.getElementById('closeSidebar').addEventListener('click', () => {
+    sidebar.style.display = 'none';
+  });
 }
 
 // Add this new function to handle reverse geocoding
@@ -904,3 +1147,59 @@ async function getLocationName(lat, lon) {
     return 'Posizione non disponibile';
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const infoPanel = document.getElementById("infoPanel");
+  const closePanelBtn = document.getElementById("closePanelBtn");
+  const openPanelBtn = document.getElementById("openPanelBtn");
+
+  closePanelBtn.addEventListener("click", () => {
+    infoPanel.style.display = "none";
+    openPanelBtn.style.display = "inline-block";
+  });
+
+  openPanelBtn.addEventListener("click", () => {
+    infoPanel.style.display = "block";
+    openPanelBtn.style.display = "none";
+  });
+});
+
+// Nuova funzione per aggiornare il titolo e il sottotitolo del pannello informazioni
+function updateInfoPanel() {
+  const infoPanelTitle = document.getElementById("infoPanelTitle");
+  const infoPanelSubtitle = document.getElementById("infoPanelSubtitle");
+
+  if (isMapView) {
+    infoPanelTitle.textContent = " Geografia personale";
+    infoPanelSubtitle.textContent = "Una mappa tridimensionale dei miei scatti. Ogni foto è collocata nello spazio secondo le sue coordinate geografiche e altimetriche, per mostrare dove e a quale altezza è stata scattata.";
+  } else if (isAltezze) {
+    infoPanelTitle.textContent = "Altitudini nel tempo";
+    infoPanelSubtitle.textContent = "Uno sguardo verticale alla mia vita. Ogni punto rappresenta una foto scattata a una determinata altitudine, ordinata cronologicamente lungo l'asse del tempo.";
+  } else if (isSpostamenti) {
+    infoPanelTitle.textContent = "Viaggi e distanze";
+    infoPanelSubtitle.textContent = "Segui i miei spostamenti nel tempo. Una linea rossa traccia il mio percorso nel mondo, dalle prime alle ultime foto. Include il totale dei chilometri percorsi, le foto scattate e una panoramica dei luoghi visitati.";
+  }
+}
+
+// Chiamare questa funzione ogni volta che la modalità cambia
+posizioniBtn.addEventListener("click", () => {
+  isMapView = true;
+  isAltezze = false;
+  isSpostamenti = false;
+  updateInfoPanel(); // Aggiorna il titolo e sottotitolo
+});
+
+toggleBtn.addEventListener("click", () => {
+  isMapView = false;
+  isAltezze = true;
+  isSpostamenti = false;
+  updateInfoPanel(); // Aggiorna il titolo e sottotitolo
+});
+
+gridBtn.addEventListener("click", () => {
+  isMapView = false;
+  isAltezze = false;
+  isSpostamenti = true;
+  updateInfoPanel(); // Aggiorna il titolo e sottotitolo
+});
+

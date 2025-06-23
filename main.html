@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon"         href="./icons/icon_32.png"  type="image/png">
+	  <link rel="icon"         href="./icons/icon_256.png" type="image/png">
+	  <link rel="manifest"     href="./manifest.json">
     <title>Archivio foto</title>
     <link rel="stylesheet" href="stile.css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -15,13 +18,52 @@
         <!-- Your existing content here -->
       </div>
 
-      <div class="absolute top-0 left-0 button-container p-2">
+      <div class="absolute top-2 left-2 button-container p-2">
         <div class="flex flex-row gap-4">
-          <button id="posizioni" class="bg-sky-500 hover:bg-sky-700 rounded p-2">Posizioni</button>
-          <button id="viewToggle" class="bg-sky-500 hover:bg-sky-700 rounded p-2">Altezze</button>
-          <button id="gridToggle" class="bg-sky-500 hover:bg-sky-700 rounded p-2">Spostamenti</button>
+          <button id="viewToggle" class="bg-neutral-500 hover:bg-neutral-600 rounded-md shadow-md px-4 py-2 text-white">Altitudini</button>
+          <button id="gridToggle" class="bg-neutral-500 hover:bg-neutral-600 rounded-md shadow-md px-4 py-2 text-white">Percorsi</button>
+          <button id="posizioni" class="bg-neutral-500 hover:bg-neutral-600 rounded-md shadow-md px-4 py-2 text-white">Mappa 3D</button>
+          <button id="playPause" class="bg-blue-500 hover:bg-blue-600 rounded-md shadow-md px-4 py-2 text-white" style="display: none;">Play</button>
         </div>
+        <!-- Pannello informativo -->
+      <div id="infoPanel" class="absolute top-20 left-2 bg-neutral-800 text-white rounded-xl shadow-md p-4 w-fit max-w-[330px] z-50 transition-all duration-300" >
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="text-xl font-bold mb-1" id="infoPanelTitle">Altimetro</h3>
+              <p class="text-sm text-white" id="infoPanelSubtitle">
+                 Uno sguardo verticale alla mia vita. Ogni punto rappresenta una foto scattata a una determinata altitudine, ordinata cronologicamente lungo l'asse del tempo.
+                  </p>
+
+          </div>
+          <button id="closePanelBtn" class="ml-4 text-gray-400 hover:text-white text-lg">&times;</button>
+        </div>
+      </div>
+
+<!-- Pulsante per riaprire -->
+<button id="openPanelBtn" class="absolute top-20 left-2 bg-neutral-500 hover:bg-neutral-600 text-white rounded p-2 px-3 py-1 text-sm shadow-md hidden z-50">
+  Info
+</button>
        
+      </div>
+
+      <div id="continenti-wrapper" style="display: none;" class="absolute bottom-0 left-2 p-2 text-lg text-white">
+        Foto per continente: </br>
+        <span id="continenti"></span>
+      </div>
+
+      <div id="kmPercorsi-wrapper" style="display: none;" class="absolute bottom-0 left-391 p-2 text-lg text-white">
+        Km percorsi: </br>
+        <span id="kmPercorsi"></span>
+      </div>
+
+      <div id="kmPercorsiOgniAnno-wrapper" style="display: none;" class="absolute bottom-20 left-391 p-2 text-lg text-white">
+        Km all'anno: </br> 
+        <span id="kmPercorsiOgniAnno"></span>
+      </div>
+
+      <div id="fotoScattateOgniAnno-wrapper" style="display: none;" class="absolute bottom-41 left-2 p-2 text-lg text-white">
+        Foto all'anno: </br> 
+        <span id="fotoScattateOgniAnno"></span>
       </div>
 
     </div>

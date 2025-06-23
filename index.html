@@ -1,22 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  </head>
-    <title>Archivio foto</title>
-    <link rel="stylesheet" href="stile.css" />
-  </head>
-  <body>
-    <div>
-      <h1 class="text-3xl font-bold text-gray-500">
-      Le mie 11.680 foto scattate con il mio iPhone nell'arco di dieci anni,
-      <br />dal 2016 al 2025.
-      </h1>
-      <a id="archiveLink" href="main.html" class="underline text-lg">Entra</a>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
-    <script src="sketch.js"></script>
-  </body>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon"         href="./icons/icon_32.png"  type="image/png">
+	<link rel="icon"         href="./icons/icon_256.png" type="image/png">
+	<link rel="manifest"     href="./manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <title>Diario geografico</title>
+  <style>
+  @font-face {
+    font-family: 'Favorit';
+    src: url('/assets/favorit.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'FavoritBold';
+    src: url('/assets/favoritBold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  html, body {
+  background-color: hsl(0, 0%, 50%);
+}
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: hsl(0, 0%, 50%);
+    font-family: 'Favorit', sans-serif;
+  }
+
+  h1 {
+    font-family: 'favorit', sans-serif;
+    color: white; /* Colore della scritta */
+    background-color: black; /* Rettangolo nero */
+    width: 100%; /* Occupa tutta la larghezza */
+    text-align: center; /* Centra il testo */
+    padding: 0px; /* Altezza del rettangolo */
+    margin: 0; /* Rimuove margini */
+    font-size: 30px; /* Dimensione del testo */
+  }
+
+  h2 {
+    font-family: 'Favorit', sans-serif;
+    font-size: 16px;
+    color: white; /* Colore della scritta */
+    background-color: black; /* Rettangolo nero */
+    width: 100%; /* Occupa tutta la larghezza */
+    text-align: center; /* Centra il testo */
+    padding: 8px; /* Altezza del rettangolo */
+    margin-bottom: 20px; /* Rimuove margini */
+    padding-top: 0px;
+  }
+
+  #startPage {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #description {
+    color: white;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  /* #archiveLink {
+    padding: .75rem 1.5rem;
+    background: (50);
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
+  } */
+
+  #mainContent {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+  }
+</style>
+
+  </style>
+</head>
+<body>
+
+  <div id="startPage">
+    <h1>
+      Diario geografico
+    </h1>
+    <h2 class="bg-black text-xl text-white ">
+    Un archivio interattivo delle mie 11.680 foto scattate tra il 2016 e il 2025, organizzato in base alla posizione geografica.<br>
+    Attraverso questo sito puoi esplorare i luoghi che ho visitato nel mondo, seguire i miei spostamenti nel tempo o osservare le altitudini raggiunte durante i viaggi.
+    </h2>
+    <!-- Modifica il link per collegarsi a main.html -->
+    <a id="archiveLink" href="main.html" class="bg-black hover:bg-neutral-700 rounded-md shadow-md px-4 py-2 text-white mt-1">Entra</a>
+    </button>
+   
+  </div>
+
+  <div id="mainContent"><!-- qui finirà il canvas --></div>
+  <div id="sidebar"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+  <script>
+    let atlas;
+    let images = [];
+    let positions = [];
+    const tileSize = 30;    // dimensione tessera
+    const maxImages = 6000;  // max 100 tessere
+    let visibleImages = 0; // Quante immagini mostrare inizialmente
+    const imagesPerFrame = 1; // Quante immagini aggiungere ogni frame
+
+    function preload() {
+    removeElements(); // Elimina la pagina predefinita "Loading..." di p5.js
+    atlas = loadImage('atlas_128.jpg');
+}
+
+
+    function setup() {
+      const cnv = createCanvas(windowWidth, windowHeight);
+      cnv.parent('mainContent');         // INJECT nel div corretto
+      cnv.style('position','absolute');  // posizionato esattamente
+      cnv.style('top','0');
+      cnv.style('left','0');
+      background(50);
+      generateImagesAndPositions();
+    }
+
+    function generateImagesAndPositions() {
+      images = [];
+      positions = [];
+      let count = 0;
+      for (let y = 0; y < atlas.height && count < maxImages; y += 128) {
+        for (let x = 0; x < atlas.width && count < maxImages; x += 128) {
+          let img = atlas.get(x, y, 128, 128);
+          img.loadPixels();
+          for (let i = 0; i < img.pixels.length; i += 4) {
+            if (
+              img.pixels[i] === 0 &&
+              img.pixels[i + 1] === 0 &&
+              img.pixels[i + 2] === 0
+            ) {
+              img.pixels[i + 3] = 0;
+            }
+          }
+          img.updatePixels();
+          images.push(img);
+          count++;
+        }
+      }
+      for (let i = 0; i < images.length; i++) {
+        positions.push({
+          x: random(windowWidth - tileSize),
+          y: random(windowHeight - tileSize),
+          dx: random(-1, 1) * (windowWidth / 1000), // Modifica velocità in base alla larghezza
+          dy: random(-1, 1) * (windowHeight / 1000), // Modifica velocità in base all'altezza
+          targetDx: random(-1, 1) * (windowWidth / 1000),
+          targetDy: random(-1, 1) * (windowHeight / 1000),
+        });
+      }
+    }
+
+    function draw() {
+      background(50);
+      visibleImages = min(Math.floor(visibleImages * 1.1) + 1, images.length);
+
+      for (let i = 0; i < visibleImages; i++) {
+        let pos = positions[i];
+        pos.dx = lerp(pos.dx, pos.targetDx, 0.05);
+        pos.dy = lerp(pos.dy, pos.targetDy, 0.05);
+        pos.x += pos.dx;
+        pos.y += pos.dy;
+
+        // bounce
+        if (pos.x <= 0) {
+          pos.x = 0;
+          pos.dx = Math.abs(pos.dx);
+          pos.targetDx = Math.abs(pos.targetDx);
+        } else if (pos.x >= windowWidth - tileSize) {
+          pos.x = windowWidth - tileSize;
+          pos.dx = -Math.abs(pos.dx);
+          pos.targetDx = -Math.abs(pos.targetDx);
+        }
+
+        if (pos.y <= 0) {
+          pos.y = 0;
+          pos.dy = Math.abs(pos.dy);
+          pos.targetDy = Math.abs(pos.targetDy);
+        } else if (pos.y >= windowHeight - tileSize) {
+          pos.y = windowHeight - tileSize;
+          pos.dy = -Math.abs(pos.dy);
+          pos.targetDy = -Math.abs(pos.targetDy);
+        }
+
+        image(images[i], pos.x, pos.y, tileSize, tileSize);
+      }
+
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      generateImagesAndPositions(); // Rigenera le posizioni in base alla nuova dimensione
+    }
+  }
+  </script>
+</body>
 </html>
