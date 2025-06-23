@@ -6,7 +6,7 @@ Elaborato 1: Diario geografico
 
 # Diario geografico
 Autore: Leonardo Mariucci  
-[Diario geografico]([https://ixd-supsi.github.io/2023/esempi/mp_hands/es6/1_landmarks](https://leomariu.github.io/jpeg/))
+[Diario geografico]([https://leomariu.github.io/Its_only_a_trip/)
 
 
 ## Introduzione e tema
